@@ -185,8 +185,8 @@ def build_report(root: Path, max_bytes: int, warn_bytes: int) -> dict[str, Any]:
     errors: list[dict[str, str]] = []
     warnings: list[dict[str, str]] = []
 
-    validate_root_entrypoint(root, errors)
-    validate_domain_entrypoints(root, errors)
+    validate_root_entrypoint(root, errors, warnings)
+    validate_domain_entrypoints(root, errors, warnings)
     spec_files = validate_spec_index(root, errors, warnings)
     validate_legacy_sources(root, errors)
     validate_claude_entrypoint(root, errors)
@@ -210,6 +210,7 @@ def build_report(root: Path, max_bytes: int, warn_bytes: int) -> dict[str, Any]:
 def validate_root_entrypoint(
     root: Path,
     errors: list[dict[str, str]],
+    warnings: list[dict[str, str]],
 ) -> None:
     root_agents = root / "AGENTS.md"
     if not root_agents.is_file():
@@ -229,10 +230,10 @@ def validate_root_entrypoint(
             )
             continue
         if not has_actionable_navigation(text, reference, domain):
-            errors.append(
+            warnings.append(
                 issue(
                     "root.navigation_trigger_missing",
-                    f"reference to {reference} must explain when to read or search that domain",
+                    f"reference to {reference} may not explain when to read or search that domain; review manually",
                     "AGENTS.md",
                 )
             )
@@ -243,6 +244,7 @@ def validate_root_entrypoint(
 def validate_domain_entrypoints(
     root: Path,
     errors: list[dict[str, str]],
+    warnings: list[dict[str, str]],
 ) -> None:
     for domain, relative_path in DOMAIN_INDEXES.items():
         path = root / relative_path
@@ -255,10 +257,10 @@ def validate_domain_entrypoints(
         if count_headings(text) == 0:
             errors.append(issue("domain.no_heading", "documentation entrypoint needs a Markdown heading", relative))
         if not SEARCH_ACTION_PATTERN.search(text) or not DOMAIN_PURPOSE_PATTERNS[domain].search(text):
-            errors.append(
+            warnings.append(
                 issue(
                     "domain.link_only_stub",
-                    "entrypoint must explain this domain's purpose and how to read or search it",
+                    "entrypoint may not explain this domain's purpose and how to read or search it; review manually",
                     relative,
                 )
             )
@@ -301,21 +303,53 @@ def validate_spec_index(
             errors.append(
                 issue(
                     "spec.unindexed",
-                    "every Spec Markdown file must be linked exactly once from docs/specs/AGENTS.md",
-                    relative,
-                )
-            )
-        elif count > 1:
-            errors.append(
-                issue(
-                    "spec.multiply_indexed",
-                    f"Spec is linked {count} times from docs/specs/AGENTS.md",
+                    "every engineering Spec Markdown file must be linked at least once from docs/specs/AGENTS.md",
                     relative,
                 )
             )
 
+    validate_duplicate_spec_index_rows(root, index_path, index_text, warnings)
     validate_spec_duplicates(root, spec_files, errors, warnings)
     return spec_files
+
+
+def validate_duplicate_spec_index_rows(
+    root: Path,
+    index_path: Path,
+    index_text: str,
+    warnings: list[dict[str, str]],
+) -> None:
+    seen_rows: dict[str, int] = {}
+    relative_index = index_path.relative_to(root).as_posix()
+
+    for line_number, line in enumerate(index_text.splitlines(), start=1):
+        row = line.strip()
+        if not row or not extract_link_targets(row):
+            continue
+
+        links_to_spec = False
+        for raw_target in extract_link_targets(row):
+            resolved, outside = resolve_local_link(root, index_path, raw_target)
+            if outside or resolved is None:
+                continue
+            if len(resolved.parts) >= 3 and resolved.parts[:2] == ("docs", "specs"):
+                if resolved.name not in {"AGENTS.md", "AGENTS.override.md", "CLAUDE.md"}:
+                    links_to_spec = True
+                    break
+        if not links_to_spec:
+            continue
+
+        first_line = seen_rows.get(row)
+        if first_line is None:
+            seen_rows[row] = line_number
+            continue
+        warnings.append(
+            issue(
+                "spec.duplicate_index_row",
+                f"line {line_number} duplicates the exact Spec index row on line {first_line}",
+                relative_index,
+            )
+        )
 
 
 def validate_spec_duplicates(

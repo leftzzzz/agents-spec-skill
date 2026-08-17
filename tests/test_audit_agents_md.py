@@ -84,6 +84,9 @@ Search technical documents here for architecture, implementation design, and rat
     def error_codes(self, payload: dict[str, object]) -> set[str]:
         return {item["code"] for item in payload["errors"]}  # type: ignore[index]
 
+    def warning_codes(self, payload: dict[str, object]) -> set[str]:
+        return {item["code"] for item in payload["warnings"]}  # type: ignore[index]
+
     def test_valid_layout_does_not_require_claude_md(self) -> None:
         self.create_valid_layout()
 
@@ -165,18 +168,32 @@ Search technical documents here for architecture, implementation design, and rat
         self.assertEqual(completed.returncode, 1, completed.stdout)
         self.assertIn("spec.unindexed", self.error_codes(payload))
 
-    def test_multiply_indexed_spec_is_a_hard_error(self) -> None:
+    def test_spec_can_have_multiple_distinct_trigger_links(self) -> None:
         self.create_valid_layout()
         index = self.root / "docs/specs/AGENTS.md"
         index.write_text(
-            index.read_text(encoding="utf-8") + "- [Orders again](projects/orders.md)\n",
+            index.read_text(encoding="utf-8") + "- [When changing order identity](projects/orders.md)\n",
             encoding="utf-8",
         )
 
         completed, payload = self.run_guard("--check")
 
-        self.assertEqual(completed.returncode, 1, completed.stdout)
-        self.assertIn("spec.multiply_indexed", self.error_codes(payload))
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertNotIn("spec.unindexed", self.error_codes(payload))
+        self.assertNotIn("spec.duplicate_index_row", self.warning_codes(payload))
+
+    def test_exact_duplicate_spec_index_row_is_a_warning(self) -> None:
+        self.create_valid_layout()
+        index = self.root / "docs/specs/AGENTS.md"
+        index.write_text(
+            index.read_text(encoding="utf-8") + "- [Orders](projects/orders.md)\n",
+            encoding="utf-8",
+        )
+
+        completed, payload = self.run_guard("--check")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertIn("spec.duplicate_index_row", self.warning_codes(payload))
 
     def test_byte_identical_specs_are_a_hard_error(self) -> None:
         self.create_valid_layout()
@@ -218,7 +235,7 @@ Search technical documents here for architecture, implementation design, and rat
         self.assertEqual(completed.returncode, 1, completed.stdout)
         self.assertIn("root.domain_index_missing", self.error_codes(payload))
 
-    def test_domain_path_without_search_purpose_is_a_hard_error(self) -> None:
+    def test_domain_path_without_search_purpose_is_a_warning(self) -> None:
         self.create_valid_layout()
         root_agents = self.root / "AGENTS.md"
         root_agents.write_text(
@@ -231,8 +248,33 @@ Search technical documents here for architecture, implementation design, and rat
 
         completed, payload = self.run_guard("--check")
 
-        self.assertEqual(completed.returncode, 1, completed.stdout)
-        self.assertIn("root.navigation_trigger_missing", self.error_codes(payload))
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertIn("root.navigation_trigger_missing", self.warning_codes(payload))
+
+    def test_link_only_domain_entrypoint_is_a_warning(self) -> None:
+        self.create_valid_layout()
+        self.write("docs/requirements/order.md", "# Order requirement\n")
+        self.write(
+            "docs/requirements/AGENTS.md",
+            "# Requirement documents\n\n- [Order](order.md)\n",
+        )
+
+        completed, payload = self.run_guard("--check")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertIn("domain.link_only_stub", self.warning_codes(payload))
+
+    def test_unindexed_business_requirement_is_outside_spec_audit(self) -> None:
+        self.create_valid_layout()
+        self.write(
+            "docs/requirements/order-discount.md",
+            "# Order discount\n\nCustomers should receive the agreed promotional discount.\n",
+        )
+
+        completed, payload = self.run_guard("--check")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertNotIn("spec.unindexed", self.error_codes(payload))
 
     def test_routing_example_inside_code_fence_does_not_satisfy_root_index(self) -> None:
         self.create_valid_layout()

@@ -1,6 +1,6 @@
 # organize-agents-spec
 
-`organize-agents-spec` is a Codex Skill and standalone repository guard for organizing agent instructions around a single live Spec source.
+`organize-agents-spec` is a Codex Skill and standalone repository guard for organizing agent instructions and non-business engineering Specs around explicit, cross-agent documentation routes.
 
 It replaces tool-specific rule stores with an explicit, cross-agent documentation model:
 
@@ -15,13 +15,13 @@ docs/
     AGENTS.md
 ```
 
-- `docs/specs/` contains current enforceable behavior and constraints.
-- `docs/requirements/` contains product intent, acceptance criteria, and product decisions.
+- `docs/specs/` contains current engineering standards, contracts, policies, and invariants.
+- `docs/requirements/` contains product or business intent, acceptance criteria, and product decisions.
 - `docs/technical/` contains architecture, implementation plans, and technical decisions.
 - Root `AGENTS.md` tells agents when to search each documentation domain.
 - Optional `CLAUDE.md` compatibility is added only when explicitly requested.
 
-The Skill does not pretend that a script can determine whether a business rule is semantically outdated. It enforces structural facts such as missing indexes, broken links, duplicate Spec sources, legacy rule locations, and invalid Claude compatibility entries.
+The Skill routes business requirements and technical rationale without semantically policing their content. Its guard enforces structural facts such as missing indexes, broken links, duplicate engineering Spec sources, legacy rule locations, and invalid Claude compatibility entries; natural-language routing quality remains a review warning.
 
 ## Install
 
