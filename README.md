@@ -1,6 +1,6 @@
-# organize-agents-spec
+# agents-spec
 
-`organize-agents-spec` is a Codex Skill and standalone repository guard for organizing agent instructions and non-business engineering Specs around explicit, cross-agent documentation routes.
+`agents-spec` is a Codex Skill and standalone repository guard for organizing agent instructions and non-business engineering Specs around explicit, cross-agent documentation routes.
 
 It replaces tool-specific rule stores with an explicit, cross-agent documentation model:
 
@@ -28,14 +28,14 @@ The Skill routes business requirements and technical rationale without semantica
 Clone the repository into the Codex skills directory:
 
 ```bash
-git clone https://github.com/leftzzzz/organize-agents-spec.git \
-  "${CODEX_HOME:-$HOME/.codex}/skills/organize-agents-spec"
+git clone https://github.com/leftzzzz/agents-spec-skill.git \
+  "${CODEX_HOME:-$HOME/.codex}/skills/agents-spec"
 ```
 
 Invoke it in Codex with:
 
 ```text
-$organize-agents-spec
+$agents-spec
 ```
 
 The Skill produces shared `AGENTS.md` navigation that both Codex and Claude Code can follow. It does not assume that Claude Code directly loads Codex Skill packages.

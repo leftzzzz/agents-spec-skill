@@ -6,7 +6,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parents[1]
-SKILL_NAME = "organize-agents-spec"
+SKILL_NAME = "agents-spec"
+REPOSITORY_NAME = "agents-spec-skill"
 
 
 class SkillPackageTests(unittest.TestCase):
@@ -27,9 +28,9 @@ class SkillPackageTests(unittest.TestCase):
         text = (ROOT / "agents/openai.yaml").read_text(encoding="utf-8")
 
         self.assertIn(f"${SKILL_NAME}", text)
-        self.assertIn('display_name: "Organize Agent Specs"', text)
+        self.assertIn('display_name: "AGENTS Spec"', text)
 
-    def test_runtime_files_do_not_reference_previous_skill_name(self) -> None:
+    def test_runtime_files_do_not_reference_previous_skill_names(self) -> None:
         runtime_files = [
             ROOT / "SKILL.md",
             ROOT / "agents/openai.yaml",
@@ -38,13 +39,15 @@ class SkillPackageTests(unittest.TestCase):
 
         for path in runtime_files:
             with self.subTest(path=path):
-                self.assertNotIn("organize-agents-md", path.read_text(encoding="utf-8"))
+                text = path.read_text(encoding="utf-8")
+                self.assertNotIn("organize-agents-md", text)
+                self.assertNotIn("organize-agents-spec", text)
 
     def test_public_repository_metadata_matches_skill(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
 
-        self.assertIn(f"github.com/leftzzzz/{SKILL_NAME}.git", readme)
+        self.assertIn(f"github.com/leftzzzz/{REPOSITORY_NAME}.git", readme)
         self.assertIn(f"${SKILL_NAME}", readme)
         self.assertTrue(license_text.startswith("MIT License\n"))
         self.assertIn("Copyright (c) 2026 leftzzzz", license_text)

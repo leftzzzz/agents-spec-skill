@@ -1,9 +1,9 @@
 ---
-name: organize-agents-spec
+name: agents-spec
 description: Audit, reorganize, split, migrate, and maintain AGENTS.md, optional CLAUDE.md instructions, and non-business engineering Specs with cross-agent routing and SDD-aligned docs/specs, docs/requirements, and docs/technical directories. Use when cleaning up agent instructions, organizing engineering standards, contracts, policies, or invariants, separating business requirements and technical decisions from Specs, migrating rules out of .agents, checking Codex and Claude Code compatibility, or installing deterministic structure guardrails.
 ---
 
-# Organize Agent Specs
+# AGENTS Spec
 
 ## Core Model
 
