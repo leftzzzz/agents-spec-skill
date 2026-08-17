@@ -1,0 +1,4 @@
+interface:
+  display_name: "Organize Agent Specs"
+  short_description: "统一 Agent 文档路由、Spec 单一来源与结构护栏"
+  default_prompt: "Use $organize-agents-spec to audit and reorganize this repository's shared agent instructions and SDD document indexes."
