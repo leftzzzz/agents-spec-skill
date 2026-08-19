@@ -1,20 +1,22 @@
 # agents-spec
 
-`agents-spec` 是一个可跨 Agent 使用的 [Agent Skill](https://agentskills.io/)，用于审计和整理共享 Agent 指令、工程 Specs、需求文档与技术决策。
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-源代码：[github.com/leftzzzz/agents-spec-skill](https://github.com/leftzzzz/agents-spec-skill)
+`agents-spec` is a portable [Agent Skill](https://agentskills.io/) for auditing and organizing shared agent instructions, engineering Specs, requirements, and technical decisions.
 
-仓库只维护一份权威 Skill：`skills/agents-spec/SKILL.md`。Codex、Claude Code、Cursor、GitHub Copilot、OpenCode 及其他兼容 Agent 均加载这份 Skill；各平台清单只负责发现和安装，不复制 Skill 内容。
+Source: [github.com/leftzzzz/agents-spec-skill](https://github.com/leftzzzz/agents-spec-skill)
 
-## 中文支持
+The repository maintains one canonical Skill: `skills/agents-spec/SKILL.md`. Codex, Claude Code, Cursor, GitHub Copilot, OpenCode, and other compatible agents load the same Skill. Platform manifests only provide discovery and installation; they do not duplicate the Skill body.
 
-README 和使用示例均提供简体中文。Skill 的内部指令使用英文以保持跨平台兼容，这不影响在中文对话或中文仓库中使用；直接用中文描述任务即可。
+## Language support
 
-## 一键安装
+The Skill works with Chinese prompts and Chinese-language repositories. Its internal instructions remain in English for consistent cross-agent behavior, but you can describe tasks in Chinese or English.
 
-安装命令依赖 Node.js 22.20 或更高版本，这是当前 [`skills` CLI](https://github.com/vercel-labs/skills) 的运行要求。
+## One-command installation
 
-下面的命令均为全局安装，执行一次后可在该 Agent 的所有项目中使用。请选择你正在使用的平台，复制对应的一条命令执行即可。
+The commands below require Node.js 22.20 or newer, which is the runtime requirement of the current [`skills` CLI](https://github.com/vercel-labs/skills).
+
+Each command installs the Skill globally so it is available in all projects for that agent. Choose your agent and run the corresponding command.
 
 ### Cursor
 
@@ -46,25 +48,25 @@ npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent gith
 npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent opencode --global --yes
 ```
 
-### 交互式选择其他 Agent
+### Choose another agent interactively
 
-不指定 `--agent` 时，安装器会检测已支持的 Agent，并让你选择安装目标与安装范围：
+If you omit `--agent`, the installer detects supported agents and prompts you to choose the target agent and installation scope:
 
 ```bash
 npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec
 ```
 
-以上单平台命令中的 `--global` 表示全局安装，`--yes` 表示无需交互确认。如需仅在当前项目安装，请先进入项目根目录，再执行对应命令并删除 `--global` 参数。
+In the commands above, `--global` means user-level installation and `--yes` skips confirmation prompts. For a project-only installation, enter the project root and remove `--global`.
 
-也可以从本地检出的仓库试装：
+You can also try a local checkout before the GitHub repository is published:
 
 ```bash
 npx --yes skills add ./agents-spec-skill --skill agents-spec
 ```
 
-手动安装时，将完整的 `skills/agents-spec/` 目录复制到对应位置：
+For manual installation, copy the complete `skills/agents-spec/` directory to the corresponding location:
 
-| Agent | 项目级目录 | 全局目录 |
+| Agent | Project directory | Global directory |
 | --- | --- | --- |
 | Claude Code | `.claude/skills/` | `~/.claude/skills/` |
 | Codex | `.agents/skills/` | `~/.codex/skills/` |
@@ -72,18 +74,18 @@ npx --yes skills add ./agents-spec-skill --skill agents-spec
 | GitHub Copilot | `.agents/skills/` | `~/.copilot/skills/` |
 | OpenCode | `.agents/skills/` | `~/.config/opencode/skills/` |
 
-## 使用
+## Usage
 
-安装后直接用自然语言提出任务，例如：
+After installation, describe the task in natural language:
 
 ```text
-使用 agents-spec 审计这个仓库的 Agent 指令和 Spec 索引。
-修改文件前，先报告审计结果并给出迁移方案。
+Use agents-spec to audit this repository's agent instructions and Spec indexes.
+Report the audit results and migration plan before editing any files.
 ```
 
-不同 Agent 的显式 Skill 调用语法可能不同；自然语言调用适用于所有兼容平台。在 Codex 中也可以直接使用 `$agents-spec`。
+Explicit Skill invocation syntax varies by agent. Natural-language invocation works across compatible platforms. In Codex, you can also use `$agents-spec`.
 
-目标仓库结构如下：
+The target repository model is:
 
 ```text
 AGENTS.md
@@ -96,27 +98,27 @@ docs/
     AGENTS.md
 ```
 
-- `docs/specs/` 保存当前生效的工程标准、契约、策略与不变量。
-- `docs/requirements/` 保存产品意图、验收条件与产品决策。
-- `docs/technical/` 保存架构、实施方案与技术决策。
-- 根 `AGENTS.md` 告诉所有 Agent 应在什么情况下读取或搜索各类文档。
-- 平台专用指令文件只作为共享根入口的轻量适配层。
+- `docs/specs/` contains current engineering standards, contracts, policies, and invariants.
+- `docs/requirements/` contains product intent, acceptance criteria, and product decisions.
+- `docs/technical/` contains architecture, implementation plans, and technical decisions.
+- The root `AGENTS.md` tells every agent when to read or search each documentation domain.
+- Platform-specific instruction files remain thin adapters to the shared root entrypoint.
 
-## 审计脚本
+## Guard script
 
-随 Skill 提供的审计脚本没有第三方运行时依赖。执行只读结构检查：
+The bundled guard has no third-party runtime dependencies. Run a read-only structural check:
 
 ```bash
 python skills/agents-spec/scripts/audit_agents_md.py /path/to/repository --check
 ```
 
-为 CI 输出 JSON：
+Emit JSON for CI:
 
 ```bash
 python skills/agents-spec/scripts/audit_agents_md.py /path/to/repository --check --json
 ```
 
-仅在用户明确要求补充 Claude 兼容入口后执行：
+Only after a user explicitly asks to add a missing Claude compatibility entry:
 
 ```bash
 python skills/agents-spec/scripts/audit_agents_md.py \
@@ -125,11 +127,11 @@ python skills/agents-spec/scripts/audit_agents_md.py \
   --add-claude
 ```
 
-退出码：`0` 表示结构合规，`1` 表示存在结构违规，`2` 表示调用无效或内部失败。
+Exit codes are `0` for compliance, `1` for structural violations, and `2` for invalid invocation or internal failure.
 
-## 跨平台打包
+## Portable packaging
 
-仓库采用开放的 Agent Skills 目录结构：
+The repository uses the open Agent Skills layout:
 
 ```text
 skills/agents-spec/
@@ -139,15 +141,15 @@ skills/agents-spec/
   scripts/audit_agents_md.py
 ```
 
-仓库根目录还提供可选的平台原生元数据：
+Optional native metadata lives at the repository root:
 
 - `.codex-plugin/plugin.json`
 - `.claude-plugin/plugin.json`
 - `.cursor-plugin/plugin.json`
 
-这些文件都指向同一个 `skills/` 目录。贡献代码时不得增加平台专用的 `SKILL.md` 副本。
+These files point to the same `skills/` directory. Contributions must not add platform-specific copies of `SKILL.md`.
 
-## 开发
+## Development
 
 ```bash
 python -m unittest discover -s tests -v
@@ -158,8 +160,8 @@ python /path/to/plugin-creator/scripts/validate_plugin.py .
 npx --yes @anthropic-ai/claude-code@2.1.229 plugin validate .
 ```
 
-修改 Skill 契约或审计脚本行为前，请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing the Skill contract or guard behavior.
 
-## 许可证
+## License
 
 MIT

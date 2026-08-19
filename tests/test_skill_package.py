@@ -48,12 +48,17 @@ class SkillPackageTests(unittest.TestCase):
 
     def test_public_repository_metadata_matches_skill(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        readme_zh = (ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
         license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
 
         self.assertIn(f"github.com/leftzzzz/{REPOSITORY_NAME}", readme)
         self.assertIn(f"${SKILL_NAME}", readme)
         self.assertIn(f"npx --yes skills add leftzzzz/{REPOSITORY_NAME}", readme)
-        self.assertIn("## 中文支持", readme)
+        self.assertIn("[English](README.md) | [简体中文](README.zh-CN.md)", readme)
+        self.assertIn("[English](README.md) | **简体中文**", readme_zh)
+        self.assertIn("## Language support", readme)
+        self.assertIn("## 中文支持", readme_zh)
+        self.assertNotIn("## 中文支持", readme)
         self.assertTrue(license_text.startswith("MIT License\n"))
         self.assertIn("Copyright (c) 2026 leftzzzz", license_text)
         self.assertEqual(
@@ -63,24 +68,28 @@ class SkillPackageTests(unittest.TestCase):
     def test_readme_has_one_command_global_install_for_each_primary_agent(
         self,
     ) -> None:
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        readmes = {
+            "English": (ROOT / "README.md").read_text(encoding="utf-8"),
+            "Chinese": (ROOT / "README.zh-CN.md").read_text(encoding="utf-8"),
+        }
         command_prefix = (
             f"npx --yes skills add leftzzzz/{REPOSITORY_NAME} "
             f"--skill {SKILL_NAME} --agent"
         )
 
-        for agent in [
-            "cursor",
-            "claude-code",
-            "codex",
-            "github-copilot",
-            "opencode",
-        ]:
-            with self.subTest(agent=agent):
-                self.assertIn(
-                    f"{command_prefix} {agent} --global --yes",
-                    readme,
-                )
+        for language, readme in readmes.items():
+            for agent in [
+                "cursor",
+                "claude-code",
+                "codex",
+                "github-copilot",
+                "opencode",
+            ]:
+                with self.subTest(language=language, agent=agent):
+                    self.assertIn(
+                        f"{command_prefix} {agent} --global --yes",
+                        readme,
+                    )
 
     def test_native_manifests_are_thin_and_share_one_skill_directory(self) -> None:
         manifest_paths = [
