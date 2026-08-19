@@ -1,0 +1,16 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "agents-spec",
+  "description": "Portable Agent Skills for shared instructions and engineering Spec governance.",
+  "owner": {
+    "name": "leftzzzz",
+    "url": "https://github.com/leftzzzz"
+  },
+  "plugins": [
+    {
+      "name": "agents-spec",
+      "source": "./",
+      "description": "Cross-agent governance for AGENTS.md, engineering Specs, and documentation routing."
+    }
+  ]
+}

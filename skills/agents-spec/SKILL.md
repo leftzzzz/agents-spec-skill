@@ -1,6 +1,6 @@
 ---
 name: agents-spec
-description: Audit, reorganize, split, migrate, and maintain AGENTS.md, optional CLAUDE.md instructions, and non-business engineering Specs with cross-agent routing and SDD-aligned docs/specs, docs/requirements, and docs/technical directories. Use when cleaning up agent instructions, organizing engineering standards, contracts, policies, or invariants, separating business requirements and technical decisions from Specs, migrating rules out of .agents, checking Codex and Claude Code compatibility, or installing deterministic structure guardrails.
+description: Audit, reorganize, split, migrate, and maintain AGENTS.md, optional platform instruction files, and non-business engineering Specs with cross-agent routing and SDD-aligned docs/specs, docs/requirements, and docs/technical directories. Use when cleaning up agent instructions, organizing engineering standards, contracts, policies, or invariants, separating business requirements and technical decisions from Specs, migrating rules out of .agents, checking multi-agent compatibility, or installing deterministic structure guardrails.
 ---
 
 # AGENTS Spec
@@ -89,23 +89,23 @@ Make each documentation entrypoint a real navigator, not a link-only stub:
 
 Use Markdown links in the Spec index so the guard script can validate paths deterministically.
 
-## Claude Code Compatibility
+## Agent Compatibility
 
-Treat root `CLAUDE.md` as optional:
+Treat platform-specific instruction files as optional adapters around the shared root `AGENTS.md`:
 
-- Never create `CLAUDE.md` unless it is missing and the user explicitly asks to add it.
-- When both conditions are true, run the guard with `--fix --add-claude` to create the relative symlink `CLAUDE.md -> AGENTS.md`.
-- If the platform cannot create symlinks, allow the script to fall back to a regular `CLAUDE.md` containing `@AGENTS.md`.
-- Never overwrite an existing file or symlink.
-- If `CLAUDE.md` exists, require it to resolve to root `AGENTS.md` or import `@AGENTS.md`; report an invalid existing entry as an error.
-- Keep all shared rules in root `AGENTS.md`. Use `.claude/CLAUDE.md` only for genuinely Claude-specific additions.
+- Keep shared rules and routing in root `AGENTS.md`, which is the only guaranteed boot entrypoint across agents.
+- Add a platform file only when the target agent requires or the user explicitly requests it.
+- When a platform supports imports or symlinks, make the adapter resolve to `AGENTS.md`; otherwise keep it short and link to the canonical file.
+- Never copy shared rules into multiple platform files. Put genuinely platform-specific additions in the adapter only.
+- For Claude Code, `CLAUDE.md` may be a relative symlink to `AGENTS.md` or a regular file containing a standalone `@AGENTS.md` import. Use the guard's `--fix --add-claude` only after an explicit request.
+- Keep platform manifests and marketplace metadata thin; every agent must load the same `skills/agents-spec/SKILL.md` core.
 
-A missing `CLAUDE.md` is compliant unless the user explicitly requested one.
+A missing platform file is compliant unless the target agent explicitly requires one.
 
 ## Workflow
 
 1. Audit before proposing edits:
-   - Locate root and nested `AGENTS.md`, optional `CLAUDE.md`, `.agents/**/*.md`, and all three documentation directories.
+   - Locate root and nested `AGENTS.md`, optional platform instruction files, `.agents/**/*.md`, and all three documentation directories.
    - Run the bundled guard with `--check --json` when a filesystem is available.
    - Read root and only the relevant indexed documents.
 
@@ -180,6 +180,6 @@ The guard validates routing and document structure; it is not a context loader o
 - Never confuse multiple trigger indexes with multiple authoritative sources.
 - Never use keyword heuristics to auto-classify a document as a business requirement, engineering Spec, or technical decision.
 - Never infer that nested `AGENTS.md` files load identically across agent products.
-- Never create or replace `CLAUDE.md` without the explicit-request condition.
+- Never create or replace a platform instruction file without the explicit-request condition.
 - Never treat a heuristic warning as proof of a semantic conflict.
-- Prefer structured Markdown link parsing and filesystem checks over ad hoc text replacement.
+- Prefer a parser that respects Markdown link structure and filesystem checks over ad hoc text replacement.

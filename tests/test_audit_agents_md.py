@@ -8,8 +8,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
-SCRIPT = Path(__file__).parents[1] / "scripts" / "audit_agents_md.py"
+SCRIPT = (
+    Path(__file__).parents[1]
+    / "skills"
+    / "agents-spec"
+    / "scripts"
+    / "audit_agents_md.py"
+)
 
 
 class AuditAgentsMdTests(unittest.TestCase):
@@ -73,12 +78,18 @@ Search technical documents here for architecture, implementation design, and rat
 """,
         )
 
-    def run_guard(self, *arguments: str) -> tuple[subprocess.CompletedProcess[str], dict[str, object] | None]:
+    def run_guard(
+        self, *arguments: str
+    ) -> tuple[subprocess.CompletedProcess[str], dict[str, object] | None]:
         command = [sys.executable, str(SCRIPT), str(self.root), *arguments]
         if "--json" not in arguments:
             command.append("--json")
         completed = subprocess.run(command, capture_output=True, text=True, check=False)
-        payload = json.loads(completed.stdout) if completed.stdout.strip().startswith("{") else None
+        payload = (
+            json.loads(completed.stdout)
+            if completed.stdout.strip().startswith("{")
+            else None
+        )
         return completed, payload
 
     def error_codes(self, payload: dict[str, object]) -> set[str]:
@@ -115,7 +126,9 @@ Search technical documents here for architecture, implementation design, and rat
         self.assertEqual(completed.returncode, 0, completed.stdout)
         if claude.is_symlink():
             self.assertEqual(os.readlink(claude), "AGENTS.md")
-            self.assertIn("created relative symlink CLAUDE.md -> AGENTS.md", payload["actions"])
+            self.assertIn(
+                "created relative symlink CLAUDE.md -> AGENTS.md", payload["actions"]
+            )
         else:
             self.assertEqual(claude.read_text(encoding="utf-8"), "@AGENTS.md\n")
             self.assertIn("created CLAUDE.md importing @AGENTS.md", payload["actions"])
@@ -136,7 +149,9 @@ Search technical documents here for architecture, implementation design, and rat
 
         self.assertEqual(completed.returncode, 1, completed.stdout)
         self.assertIn("claude.missing_import", self.error_codes(payload))
-        self.assertEqual(claude.read_text(encoding="utf-8"), "# Claude-only instructions\n")
+        self.assertEqual(
+            claude.read_text(encoding="utf-8"), "# Claude-only instructions\n"
+        )
 
     def test_existing_wrong_claude_symlink_is_not_replaced(self) -> None:
         self.create_valid_layout()
@@ -161,7 +176,10 @@ Search technical documents here for architecture, implementation design, and rat
 
     def test_unindexed_spec_is_a_hard_error(self) -> None:
         self.create_valid_layout()
-        self.write("docs/specs/projects/unindexed.md", "# Unindexed\n\nThis is a current rule.\n")
+        self.write(
+            "docs/specs/projects/unindexed.md",
+            "# Unindexed\n\nThis is a current rule.\n",
+        )
 
         completed, payload = self.run_guard("--check")
 
@@ -172,7 +190,8 @@ Search technical documents here for architecture, implementation design, and rat
         self.create_valid_layout()
         index = self.root / "docs/specs/AGENTS.md"
         index.write_text(
-            index.read_text(encoding="utf-8") + "- [When changing order identity](projects/orders.md)\n",
+            index.read_text(encoding="utf-8")
+            + "- [When changing order identity](projects/orders.md)\n",
             encoding="utf-8",
         )
 
@@ -181,6 +200,73 @@ Search technical documents here for architecture, implementation design, and rat
         self.assertEqual(completed.returncode, 0, completed.stdout)
         self.assertNotIn("spec.unindexed", self.error_codes(payload))
         self.assertNotIn("spec.duplicate_index_row", self.warning_codes(payload))
+
+    def test_markdown_link_with_balanced_parentheses_is_resolved(self) -> None:
+        self.create_valid_layout()
+        original = self.root / "docs/specs/projects/orders.md"
+        renamed = self.root / "docs/specs/projects/orders(v2).md"
+        renamed.write_text(original.read_text(encoding="utf-8"), encoding="utf-8")
+        original.unlink()
+        index = self.root / "docs/specs/AGENTS.md"
+        index.write_text(
+            index.read_text(encoding="utf-8").replace(
+                "projects/orders.md", "projects/orders(v2).md"
+            ),
+            encoding="utf-8",
+        )
+
+        completed, payload = self.run_guard("--check")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertEqual(payload["errors"], [])
+
+    def test_markdown_link_with_angle_destination_and_spaces_is_resolved(self) -> None:
+        self.create_valid_layout()
+        original = self.root / "docs/specs/projects/orders.md"
+        renamed = self.root / "docs/specs/projects/order notes.md"
+        renamed.write_text(original.read_text(encoding="utf-8"), encoding="utf-8")
+        original.unlink()
+        index = self.root / "docs/specs/AGENTS.md"
+        index.write_text(
+            index.read_text(encoding="utf-8").replace(
+                "projects/orders.md", "<projects/order notes.md>"
+            ),
+            encoding="utf-8",
+        )
+
+        completed, payload = self.run_guard("--check")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertEqual(payload["errors"], [])
+
+    def test_uppercase_spec_purpose_is_accepted(self) -> None:
+        self.create_valid_layout()
+        root_agents = self.root / "AGENTS.md"
+        root_agents.write_text(
+            root_agents.read_text(encoding="utf-8").replace(
+                "Search current behavior", "Search Current behavior"
+            ),
+            encoding="utf-8",
+        )
+
+        completed, payload = self.run_guard("--check")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertNotIn("root.navigation_trigger_missing", self.warning_codes(payload))
+
+    def test_english_failure_mode_without_validation_is_a_warning(self) -> None:
+        self.create_valid_layout()
+        agents = self.root / "AGENTS.md"
+        agents.write_text(
+            agents.read_text(encoding="utf-8")
+            + "\n## Reliability\n\nPrevent this production incident from recurring.\n",
+            encoding="utf-8",
+        )
+
+        completed, payload = self.run_guard("--check")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertIn("failure.missing_validation", self.warning_codes(payload))
 
     def test_exact_duplicate_spec_index_row_is_a_warning(self) -> None:
         self.create_valid_layout()
@@ -197,11 +283,14 @@ Search technical documents here for architecture, implementation design, and rat
 
     def test_byte_identical_specs_are_a_hard_error(self) -> None:
         self.create_valid_layout()
-        original = (self.root / "docs/specs/projects/orders.md").read_text(encoding="utf-8")
+        original = (self.root / "docs/specs/projects/orders.md").read_text(
+            encoding="utf-8"
+        )
         self.write("docs/specs/projects/orders-copy.md", original)
         index = self.root / "docs/specs/AGENTS.md"
         index.write_text(
-            index.read_text(encoding="utf-8") + "- [Orders copy](projects/orders-copy.md)\n",
+            index.read_text(encoding="utf-8")
+            + "- [Orders copy](projects/orders-copy.md)\n",
             encoding="utf-8",
         )
 
@@ -276,7 +365,9 @@ Search technical documents here for architecture, implementation design, and rat
         self.assertEqual(completed.returncode, 0, completed.stdout)
         self.assertNotIn("spec.unindexed", self.error_codes(payload))
 
-    def test_routing_example_inside_code_fence_does_not_satisfy_root_index(self) -> None:
+    def test_routing_example_inside_code_fence_does_not_satisfy_root_index(
+        self,
+    ) -> None:
         self.create_valid_layout()
         self.write(
             "AGENTS.md",

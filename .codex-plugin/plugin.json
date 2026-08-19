@@ -1,0 +1,37 @@
+{
+  "name": "agents-spec",
+  "version": "0.1.0",
+  "description": "Cross-agent governance for AGENTS.md, engineering Specs, and documentation routing.",
+  "author": {
+    "name": "leftzzzz",
+    "url": "https://github.com/leftzzzz"
+  },
+  "homepage": "https://github.com/leftzzzz/agents-spec-skill",
+  "repository": "https://github.com/leftzzzz/agents-spec-skill",
+  "license": "MIT",
+  "keywords": [
+    "agents.md",
+    "agent-skills",
+    "documentation",
+    "specs",
+    "sdd",
+    "governance"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AGENTS Spec",
+    "shortDescription": "Cross-agent documentation governance",
+    "longDescription": "Audit and organize shared agent instructions, engineering Specs, requirements, and technical decisions with one portable Agent Skill and deterministic repository guardrails.",
+    "developerName": "leftzzzz",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/leftzzzz/agents-spec-skill",
+    "defaultPrompt": [
+      "Audit this repository's agent instructions and Spec indexes with agents-spec"
+    ]
+  }
+}

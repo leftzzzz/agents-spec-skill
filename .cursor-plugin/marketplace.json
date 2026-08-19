@@ -1,0 +1,13 @@
+{
+  "name": "agents-spec",
+  "owner": {
+    "name": "leftzzzz"
+  },
+  "plugins": [
+    {
+      "name": "agents-spec",
+      "source": "./",
+      "description": "Cross-agent governance for AGENTS.md, engineering Specs, and documentation routing."
+    }
+  ]
+}
