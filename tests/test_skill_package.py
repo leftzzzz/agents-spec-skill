@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import re
 import unittest
 from pathlib import Path
@@ -84,35 +83,12 @@ class SkillPackageTests(unittest.TestCase):
                 self.assertIn("`skills/`", readme)
                 self.assertNotRegex(readme, r"npx skills add[^\n]*--agent(?:\s|=)")
 
-    def test_native_manifests_are_thin_and_share_one_skill_directory(self) -> None:
-        manifest_paths = [
-            ROOT / ".codex-plugin/plugin.json",
-            ROOT / ".claude-plugin/plugin.json",
-            ROOT / ".cursor-plugin/plugin.json",
-        ]
-        manifests = []
-        for path in manifest_paths:
-            with self.subTest(path=path):
-                payload = json.loads(path.read_text(encoding="utf-8"))
-                self.assertEqual(payload["name"], SKILL_NAME)
-                self.assertEqual(payload["version"], "0.1.0")
-                manifests.append(payload)
+    def test_repository_has_no_platform_specific_plugin_packages(self) -> None:
+        for directory in [".codex-plugin", ".claude-plugin", ".cursor-plugin"]:
+            with self.subTest(directory=directory):
+                self.assertFalse((ROOT / directory).exists())
 
-        self.assertEqual(manifests[0]["skills"], "./skills/")
-        self.assertEqual(manifests[2]["skills"], "./skills/")
         self.assertEqual(list(ROOT.rglob("SKILL.md")), [SKILL_ROOT / "SKILL.md"])
-
-    def test_native_marketplaces_reference_the_repository_plugin(self) -> None:
-        for path in [
-            ROOT / ".claude-plugin/marketplace.json",
-            ROOT / ".cursor-plugin/marketplace.json",
-        ]:
-            with self.subTest(path=path):
-                payload = json.loads(path.read_text(encoding="utf-8"))
-                self.assertEqual(payload["name"], SKILL_NAME)
-                self.assertEqual(len(payload["plugins"]), 1)
-                self.assertEqual(payload["plugins"][0]["name"], SKILL_NAME)
-                self.assertEqual(payload["plugins"][0]["source"], "./")
 
     def test_skill_directory_has_open_format_license_and_runtime_files(self) -> None:
         self.assertTrue((SKILL_ROOT / "SKILL.md").is_file())

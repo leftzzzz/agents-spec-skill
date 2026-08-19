@@ -6,7 +6,7 @@
 
 源代码：[github.com/leftzzzz/agents-spec-skill](https://github.com/leftzzzz/agents-spec-skill)
 
-仓库只维护一份权威 Skill：`skills/agents-spec/SKILL.md`。所有兼容 Agent 均加载这份 Skill；各平台清单只负责发现和安装，不复制 Skill 内容。
+仓库只维护一份权威 Skill：`skills/agents-spec/SKILL.md`。兼容 Agent 直接从开放的 `skills/` 目录发现同一份 Skill；本仓库不维护平台专用 Plugin 包。
 
 ## 中文支持
 
@@ -103,13 +103,7 @@ skills/agents-spec/
   scripts/audit_agents_md.py
 ```
 
-仓库根目录还提供可选的平台原生元数据：
-
-- `.codex-plugin/plugin.json`
-- `.claude-plugin/plugin.json`
-- `.cursor-plugin/plugin.json`
-
-这些文件都指向同一个 `skills/` 目录。贡献代码时不得增加平台专用的 `SKILL.md` 副本。
+`skills/` 目录就是完整的可分发包，兼容安装器会直接发现它。贡献代码时不得增加平台专用 Plugin 清单或 `SKILL.md` 副本。
 
 ## 开发
 
@@ -118,8 +112,7 @@ python -m unittest discover -s tests -v
 ruff check skills tests
 ruff format --check skills tests
 skills-ref validate skills/agents-spec
-python /path/to/plugin-creator/scripts/validate_plugin.py .
-npx --yes @anthropic-ai/claude-code@2.1.229 plugin validate .
+npx --yes skills@1.5.23 add . --list
 ```
 
 修改 Skill 契约或审计脚本行为前，请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。

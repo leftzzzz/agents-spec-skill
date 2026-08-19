@@ -98,7 +98,7 @@ Treat platform-specific instruction files as optional adapters around the shared
 - When a platform supports imports or symlinks, make the adapter resolve to `AGENTS.md`; otherwise keep it short and link to the canonical file.
 - Never copy shared rules into multiple platform files. Put genuinely platform-specific additions in the adapter only.
 - For Claude Code, `CLAUDE.md` may be a relative symlink to `AGENTS.md` or a regular file containing a standalone `@AGENTS.md` import. Use the guard's `--fix --add-claude` only after an explicit request.
-- Keep platform manifests and marketplace metadata thin; every agent must load the same `skills/agents-spec/SKILL.md` core.
+- Do not add platform manifests or marketplace metadata unless the target platform requires them or the user explicitly requests native plugin distribution.
 
 A missing platform file is compliant unless the target agent explicitly requires one.
 

@@ -6,7 +6,7 @@
 
 Source: [github.com/leftzzzz/agents-spec-skill](https://github.com/leftzzzz/agents-spec-skill)
 
-The repository maintains one canonical Skill: `skills/agents-spec/SKILL.md`. Every compatible agent loads the same Skill. Platform manifests only provide discovery and installation; they do not duplicate the Skill body.
+The repository maintains one canonical Skill: `skills/agents-spec/SKILL.md`. Compatible agents discover the same Skill from the open `skills/` layout; the repository does not maintain platform-specific plugin packages.
 
 ## Language support
 
@@ -103,13 +103,7 @@ skills/agents-spec/
   scripts/audit_agents_md.py
 ```
 
-Optional native metadata lives at the repository root:
-
-- `.codex-plugin/plugin.json`
-- `.claude-plugin/plugin.json`
-- `.cursor-plugin/plugin.json`
-
-These files point to the same `skills/` directory. Contributions must not add platform-specific copies of `SKILL.md`.
+The `skills/` directory is the complete distributable package. Compatible installers discover it directly; contributions must not add platform-specific plugin manifests or copies of `SKILL.md`.
 
 ## Development
 
@@ -118,8 +112,7 @@ python -m unittest discover -s tests -v
 ruff check skills tests
 ruff format --check skills tests
 skills-ref validate skills/agents-spec
-python /path/to/plugin-creator/scripts/validate_plugin.py .
-npx --yes @anthropic-ai/claude-code@2.1.229 plugin validate .
+npx --yes skills@1.5.23 add . --list
 ```
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing the Skill contract or guard behavior.

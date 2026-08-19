@@ -54,5 +54,3 @@ jobs:
           node-version: "22.20"
       - name: Validate cross-agent discovery
         run: npx --yes skills@1.5.23 add . --list
-      - name: Validate Claude Code adapter
-        run: npx --yes @anthropic-ai/claude-code@2.1.229 plugin validate .
