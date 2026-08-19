@@ -6,7 +6,7 @@
 
 源代码：[github.com/leftzzzz/agents-spec-skill](https://github.com/leftzzzz/agents-spec-skill)
 
-仓库只维护一份权威 Skill：`skills/agents-spec/SKILL.md`。Codex、Claude Code、Cursor、GitHub Copilot、OpenCode 及其他兼容 Agent 均加载这份 Skill；各平台清单只负责发现和安装，不复制 Skill 内容。
+仓库只维护一份权威 Skill：`skills/agents-spec/SKILL.md`。所有兼容 Agent 均加载这份 Skill；各平台清单只负责发现和安装，不复制 Skill 内容。
 
 ## 中文支持
 
@@ -14,65 +14,27 @@ Skill 支持中文提示词和中文仓库。Skill 的内部指令使用英文�
 
 ## 一键安装
 
-安装命令依赖 Node.js 22.20 或更高版本，这是当前 [`skills` CLI](https://github.com/vercel-labs/skills) 的运行要求。
-
-下面的命令均为全局安装，执行一次后可在该 Agent 的所有项目中使用。请选择你正在使用的平台，复制对应的一条命令执行即可。
-
-### Cursor
+[`npx skills add`](https://github.com/vercel-labs/skills) CLI 会扫描本仓库的 `skills/` 目录。该 CLI 支持的所有 Agent 都使用同一条安装命令，因此 README 不再维护各平台的专用命令清单。
 
 ```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent cursor --global --yes
+npx skills add https://github.com/leftzzzz/agents-spec-skill
 ```
 
-### Claude Code
+本仓库目前只有一个 Skill。你也可以通过它的**安装名**明确选择；安装名来自 `SKILL.md` frontmatter 中的 `name:` 字段，而不是目录名：
 
 ```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent claude-code --global --yes
+npx skills add https://github.com/leftzzzz/agents-spec-skill --skill "agents-spec"
 ```
 
-### Codex
+安装器负责选择 Agent 和安装范围；未来增加新 Agent 时，由安装器自己的支持清单统一更新。
+
+也可以从本地检出的仓库安装：
 
 ```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent codex --global --yes
+npx skills add ./agents-spec-skill
 ```
 
-### GitHub Copilot
-
-```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent github-copilot --global --yes
-```
-
-### OpenCode
-
-```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent opencode --global --yes
-```
-
-### 交互式选择其他 Agent
-
-不指定 `--agent` 时，安装器会检测已支持的 Agent，并让你选择安装目标与安装范围：
-
-```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec
-```
-
-以上单平台命令中的 `--global` 表示全局安装，`--yes` 表示无需交互确认。如需仅在当前项目安装，请先进入项目根目录，再执行对应命令并删除 `--global` 参数。
-
-也可以从本地检出的仓库试装：
-
-```bash
-npx --yes skills add ./agents-spec-skill --skill agents-spec
-```
-
-手动安装时，将完整的 `skills/agents-spec/` 目录复制到对应位置：
-
-| Agent | 项目级目录 | 全局目录 |
-| --- | --- | --- |
-| Claude Code | `.claude/skills/` | `~/.claude/skills/` |
-| Codex | `.agents/skills/` | `~/.codex/skills/` |
-| Cursor | `.agents/skills/` | `~/.cursor/skills/` |
-| GitHub Copilot | `.agents/skills/` | `~/.copilot/skills/` |
-| OpenCode | `.agents/skills/` | `~/.config/opencode/skills/` |
+如需手动安装，请将完整的 `skills/agents-spec/` 目录复制到目标 Agent 文档指定的 Skill 目录。
 
 ## 使用
 

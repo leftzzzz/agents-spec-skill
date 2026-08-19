@@ -53,7 +53,9 @@ class SkillPackageTests(unittest.TestCase):
 
         self.assertIn(f"github.com/leftzzzz/{REPOSITORY_NAME}", readme)
         self.assertIn(f"${SKILL_NAME}", readme)
-        self.assertIn(f"npx --yes skills add leftzzzz/{REPOSITORY_NAME}", readme)
+        self.assertIn(
+            f"npx skills add https://github.com/leftzzzz/{REPOSITORY_NAME}", readme
+        )
         self.assertIn("[English](README.md) | [简体中文](README.zh-CN.md)", readme)
         self.assertIn("[English](README.md) | **简体中文**", readme_zh)
         self.assertIn("## Language support", readme)
@@ -65,31 +67,22 @@ class SkillPackageTests(unittest.TestCase):
             license_text, (SKILL_ROOT / "LICENSE.txt").read_text(encoding="utf-8")
         )
 
-    def test_readme_has_one_command_global_install_for_each_primary_agent(
+    def test_readmes_use_one_generic_install_command_for_supported_agents(
         self,
     ) -> None:
         readmes = {
             "English": (ROOT / "README.md").read_text(encoding="utf-8"),
             "Chinese": (ROOT / "README.zh-CN.md").read_text(encoding="utf-8"),
         }
-        command_prefix = (
-            f"npx --yes skills add leftzzzz/{REPOSITORY_NAME} "
-            f"--skill {SKILL_NAME} --agent"
-        )
+        command = f"npx skills add https://github.com/leftzzzz/{REPOSITORY_NAME}"
+        named_skill_command = f'{command} --skill "{SKILL_NAME}"'
 
         for language, readme in readmes.items():
-            for agent in [
-                "cursor",
-                "claude-code",
-                "codex",
-                "github-copilot",
-                "opencode",
-            ]:
-                with self.subTest(language=language, agent=agent):
-                    self.assertIn(
-                        f"{command_prefix} {agent} --global --yes",
-                        readme,
-                    )
+            with self.subTest(language=language):
+                self.assertIn(command, readme)
+                self.assertIn(named_skill_command, readme)
+                self.assertIn("`skills/`", readme)
+                self.assertNotRegex(readme, r"npx skills add[^\n]*--agent(?:\s|=)")
 
     def test_native_manifests_are_thin_and_share_one_skill_directory(self) -> None:
         manifest_paths = [

@@ -6,73 +6,35 @@
 
 Source: [github.com/leftzzzz/agents-spec-skill](https://github.com/leftzzzz/agents-spec-skill)
 
-The repository maintains one canonical Skill: `skills/agents-spec/SKILL.md`. Codex, Claude Code, Cursor, GitHub Copilot, OpenCode, and other compatible agents load the same Skill. Platform manifests only provide discovery and installation; they do not duplicate the Skill body.
+The repository maintains one canonical Skill: `skills/agents-spec/SKILL.md`. Every compatible agent loads the same Skill. Platform manifests only provide discovery and installation; they do not duplicate the Skill body.
 
 ## Language support
 
 The Skill works with Chinese prompts and Chinese-language repositories. Its internal instructions remain in English for consistent cross-agent behavior, but you can describe tasks in Chinese or English.
 
-## One-command installation
+## Installing
 
-The commands below require Node.js 22.20 or newer, which is the runtime requirement of the current [`skills` CLI](https://github.com/vercel-labs/skills).
-
-Each command installs the Skill globally so it is available in all projects for that agent. Choose your agent and run the corresponding command.
-
-### Cursor
+The [`npx skills add`](https://github.com/vercel-labs/skills) CLI scans the `skills/` directory in this repository. Every agent supported by the CLI uses the same installation command, so this README does not maintain a platform-specific command list.
 
 ```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent cursor --global --yes
+npx skills add https://github.com/leftzzzz/agents-spec-skill
 ```
 
-### Claude Code
+This repository currently contains one Skill. You can also select it explicitly by its **install name** (the `name:` field in the `SKILL.md` frontmatter, not the directory name):
 
 ```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent claude-code --global --yes
+npx skills add https://github.com/leftzzzz/agents-spec-skill --skill "agents-spec"
 ```
 
-### Codex
+The installer handles agent selection and installation scope, while its own supported-agent registry stays current as new agents are added.
+
+To install from a local checkout instead:
 
 ```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent codex --global --yes
+npx skills add ./agents-spec-skill
 ```
 
-### GitHub Copilot
-
-```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent github-copilot --global --yes
-```
-
-### OpenCode
-
-```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec --agent opencode --global --yes
-```
-
-### Choose another agent interactively
-
-If you omit `--agent`, the installer detects supported agents and prompts you to choose the target agent and installation scope:
-
-```bash
-npx --yes skills add leftzzzz/agents-spec-skill --skill agents-spec
-```
-
-In the commands above, `--global` means user-level installation and `--yes` skips confirmation prompts. For a project-only installation, enter the project root and remove `--global`.
-
-You can also try a local checkout before the GitHub repository is published:
-
-```bash
-npx --yes skills add ./agents-spec-skill --skill agents-spec
-```
-
-For manual installation, copy the complete `skills/agents-spec/` directory to the corresponding location:
-
-| Agent | Project directory | Global directory |
-| --- | --- | --- |
-| Claude Code | `.claude/skills/` | `~/.claude/skills/` |
-| Codex | `.agents/skills/` | `~/.codex/skills/` |
-| Cursor | `.agents/skills/` | `~/.cursor/skills/` |
-| GitHub Copilot | `.agents/skills/` | `~/.copilot/skills/` |
-| OpenCode | `.agents/skills/` | `~/.config/opencode/skills/` |
+For manual installation, copy the complete `skills/agents-spec/` directory to the Skill directory documented by your agent.
 
 ## Usage
 
