@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
-
 WARN_BYTES_DEFAULT = 24576
 MAX_BYTES_DEFAULT = 32768
 DOMAIN_INDEXES = {
@@ -29,7 +28,6 @@ IGNORED_DIRS = {
     "runtime",
     "__pycache__",
 }
-MARKDOWN_LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]*\]\(\s*(<[^>]+>|[^)\s]+)")
 INLINE_CODE_PATTERN = re.compile(r"`([^`\n]+)`")
 CLAUDE_IMPORT_PATTERN = re.compile(r"(?m)^\s*@AGENTS\.md\s*$")
 SEARCH_ACTION_PATTERN = re.compile(
@@ -37,7 +35,10 @@ SEARCH_ACTION_PATTERN = re.compile(
     re.IGNORECASE,
 )
 DOMAIN_PURPOSE_PATTERNS = {
-    "specs": re.compile(r"current|active|behavior|constraint|rule|boundary|contract|当前|现行|行为|约束|规则|边界"),
+    "specs": re.compile(
+        r"current|active|behavior|constraint|rule|boundary|contract|当前|现行|行为|约束|规则|边界",
+        re.IGNORECASE,
+    ),
     "requirements": re.compile(
         r"product|user|acceptance|intent|产品|用户|验收|意图|为什么",
         re.IGNORECASE,
@@ -47,7 +48,12 @@ DOMAIN_PURPOSE_PATTERNS = {
         re.IGNORECASE,
     ),
 }
-KNOWN_FAILURE_PATTERN = re.compile(r"此前调到|曾经|不要再|不能再|复发|覆盖生产|绕过|事故|误判")
+KNOWN_FAILURE_PATTERN = re.compile(
+    r"此前调到|曾经|不要再|不能再|复发|覆盖生产|绕过|事故|误判|"
+    r"previous(?:ly)?|recurr(?:ence|ing)?|regression|incident|outage|"
+    r"do not repeat|must not happen again|prevent.*again",
+    re.IGNORECASE,
+)
 VALIDATION_PATTERN = re.compile(
     r"python|node|pnpm|npm|yarn|scripts/|\.test\.|test|lint|smoke|e2e|deploy|验收|测试|证据|门禁|检查|docs/|\.md",
     re.IGNORECASE,
@@ -77,7 +83,9 @@ def main() -> int:
         fix_warnings: list[dict[str, str]] = []
         actions: list[str] = []
         if args.fix:
-            fix_errors, fix_warnings, actions = apply_fixes(root, add_claude=args.add_claude)
+            fix_errors, fix_warnings, actions = apply_fixes(
+                root, add_claude=args.add_claude
+            )
 
         report = build_report(root, args.max_bytes, args.warn_bytes)
         report["mode"] = "fix" if args.fix else "check"
@@ -115,16 +123,36 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("root", nargs="?", default=".", help="Repository root to scan.")
     modes = parser.add_mutually_exclusive_group()
-    modes.add_argument("--check", action="store_true", help="Validate without modifying files (default).")
-    modes.add_argument("--fix", action="store_true", help="Apply explicitly selected deterministic fixes, then validate.")
+    modes.add_argument(
+        "--check",
+        action="store_true",
+        help="Validate without modifying files (default).",
+    )
+    modes.add_argument(
+        "--fix",
+        action="store_true",
+        help="Apply explicitly selected deterministic fixes, then validate.",
+    )
     parser.add_argument(
         "--add-claude",
         action="store_true",
         help="With --fix, add missing CLAUDE.md after an explicit user request.",
     )
-    parser.add_argument("--max-bytes", type=int, default=MAX_BYTES_DEFAULT, help="Maximum entrypoint warning threshold.")
-    parser.add_argument("--warn-bytes", type=int, default=WARN_BYTES_DEFAULT, help="Practical entrypoint byte budget.")
-    parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+    parser.add_argument(
+        "--max-bytes",
+        type=int,
+        default=MAX_BYTES_DEFAULT,
+        help="Maximum entrypoint warning threshold.",
+    )
+    parser.add_argument(
+        "--warn-bytes",
+        type=int,
+        default=WARN_BYTES_DEFAULT,
+        help="Practical entrypoint byte budget.",
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="Print machine-readable JSON."
+    )
     return parser
 
 
@@ -201,7 +229,9 @@ def build_report(root: Path, max_bytes: int, warn_bytes: int) -> dict[str, Any]:
         "actions": [],
         "stats": {
             "specFiles": len(spec_files),
-            "domainEntrypoints": sum((root / path).is_file() for path in DOMAIN_INDEXES.values()),
+            "domainEntrypoints": sum(
+                (root / path).is_file() for path in DOMAIN_INDEXES.values()
+            ),
             "claudePresent": path_lexists(root / "CLAUDE.md"),
         },
     }
@@ -250,13 +280,27 @@ def validate_domain_entrypoints(
         path = root / relative_path
         relative = relative_path.as_posix()
         if not path.is_file():
-            errors.append(issue("domain.missing", f"documentation entrypoint is required: {relative}", relative))
+            errors.append(
+                issue(
+                    "domain.missing",
+                    f"documentation entrypoint is required: {relative}",
+                    relative,
+                )
+            )
             continue
 
         text = strip_fenced_code_blocks(read_text(path))
         if count_headings(text) == 0:
-            errors.append(issue("domain.no_heading", "documentation entrypoint needs a Markdown heading", relative))
-        if not SEARCH_ACTION_PATTERN.search(text) or not DOMAIN_PURPOSE_PATTERNS[domain].search(text):
+            errors.append(
+                issue(
+                    "domain.no_heading",
+                    "documentation entrypoint needs a Markdown heading",
+                    relative,
+                )
+            )
+        if not SEARCH_ACTION_PATTERN.search(text) or not DOMAIN_PURPOSE_PATTERNS[
+            domain
+        ].search(text):
             warnings.append(
                 issue(
                     "domain.link_only_stub",
@@ -332,10 +376,14 @@ def validate_duplicate_spec_index_rows(
             resolved, outside = resolve_local_link(root, index_path, raw_target)
             if outside or resolved is None:
                 continue
-            if len(resolved.parts) >= 3 and resolved.parts[:2] == ("docs", "specs"):
-                if resolved.name not in {"AGENTS.md", "AGENTS.override.md", "CLAUDE.md"}:
-                    links_to_spec = True
-                    break
+            if (
+                len(resolved.parts) >= 3
+                and resolved.parts[:2] == ("docs", "specs")
+                and resolved.name
+                not in {"AGENTS.md", "AGENTS.override.md", "CLAUDE.md"}
+            ):
+                links_to_spec = True
+                break
         if not links_to_spec:
             continue
 
@@ -371,13 +419,17 @@ def validate_spec_duplicates(
         digest = hashlib.sha256(content).hexdigest()
         digest_groups.setdefault(digest, []).append(path)
         digest_by_path[path] = digest
-        normalized[path] = normalize_similarity_text(content.decode("utf-8-sig", errors="replace"))
+        normalized[path] = normalize_similarity_text(
+            content.decode("utf-8-sig", errors="replace")
+        )
 
     for group in digest_groups.values():
         if len(group) < 2:
             continue
         paths = [path.relative_to(root).as_posix() for path in group]
-        message = f"byte-identical Specs violate single-source governance: {', '.join(paths)}"
+        message = (
+            f"byte-identical Specs violate single-source governance: {', '.join(paths)}"
+        )
         for relative in paths:
             errors.append(issue("spec.exact_duplicate", message, relative))
 
@@ -448,7 +500,13 @@ def validate_claude_entrypoint(root: Path, errors: list[dict[str, str]]) -> None
             resolved_target = (claude.parent / raw_target).resolve(strict=False)
             expected_target = root_agents.resolve(strict=False)
         except (OSError, RuntimeError) as exc:
-            errors.append(issue("claude.broken_symlink", f"cannot resolve CLAUDE.md symlink: {exc}", "CLAUDE.md"))
+            errors.append(
+                issue(
+                    "claude.broken_symlink",
+                    f"cannot resolve CLAUDE.md symlink: {exc}",
+                    "CLAUDE.md",
+                )
+            )
             return
         if resolved_target != expected_target or not root_agents.is_file():
             errors.append(
@@ -461,7 +519,13 @@ def validate_claude_entrypoint(root: Path, errors: list[dict[str, str]]) -> None
         return
 
     if not claude.is_file():
-        errors.append(issue("claude.invalid_type", "CLAUDE.md must be a file or symlink", "CLAUDE.md"))
+        errors.append(
+            issue(
+                "claude.invalid_type",
+                "CLAUDE.md must be a file or symlink",
+                "CLAUDE.md",
+            )
+        )
         return
 
     text = read_text(claude)
@@ -487,9 +551,21 @@ def validate_entrypoint_hygiene(
     text = raw.decode("utf-8-sig", errors="replace")
 
     if len(raw) > max_bytes:
-        warnings.append(issue("entrypoint.over_budget", f"entrypoint exceeds {max_bytes} bytes", relative))
+        warnings.append(
+            issue(
+                "entrypoint.over_budget",
+                f"entrypoint exceeds {max_bytes} bytes",
+                relative,
+            )
+        )
     elif len(raw) > warn_bytes:
-        warnings.append(issue("entrypoint.near_budget", f"entrypoint exceeds {warn_bytes} bytes", relative))
+        warnings.append(
+            issue(
+                "entrypoint.near_budget",
+                f"entrypoint exceeds {warn_bytes} bytes",
+                relative,
+            )
+        )
 
     for line_number, line in enumerate(text.splitlines(), start=1):
         if re.match(r"^\s+#{1,6}\s+", line):
@@ -547,15 +623,100 @@ def extract_local_link_paths(root: Path, source: Path, text: str) -> list[Path]:
 
 def extract_link_targets(text: str) -> list[str]:
     targets: list[str] = []
-    for match in MARKDOWN_LINK_PATTERN.finditer(text):
-        target = match.group(1).strip()
-        if target.startswith("<") and target.endswith(">"):
-            target = target[1:-1]
-        targets.append(target)
+    index = 0
+    while index < len(text):
+        if text[index] != "[" or (index > 0 and text[index - 1] == "!"):
+            index += 1
+            continue
+
+        label_end = find_matching_delimiter(text, index, "[", "]")
+        if label_end is None:
+            index += 1
+            continue
+
+        opener = label_end + 1
+        while opener < len(text) and text[opener].isspace():
+            opener += 1
+        if opener >= len(text) or text[opener] != "(":
+            index = label_end + 1
+            continue
+
+        closer = find_matching_delimiter(text, opener, "(", ")")
+        if closer is None:
+            index = opener + 1
+            continue
+
+        target = parse_inline_link_destination(text[opener + 1 : closer])
+        if target:
+            targets.append(target)
+        index = closer + 1
     return targets
 
 
-def resolve_local_link(root: Path, source: Path, raw_target: str) -> tuple[Path | None, bool]:
+def find_matching_delimiter(
+    text: str,
+    start: int,
+    opening: str,
+    closing: str,
+) -> int | None:
+    depth = 0
+    escaped = False
+    angle_destination = False
+
+    for index in range(start, len(text)):
+        character = text[index]
+        if escaped:
+            escaped = False
+            continue
+        if character == "\\":
+            escaped = True
+            continue
+        if opening == "(" and character == "<":
+            angle_destination = True
+        elif opening == "(" and character == ">":
+            angle_destination = False
+        if character == opening and not angle_destination:
+            depth += 1
+        elif character == closing and not angle_destination:
+            depth -= 1
+            if depth == 0:
+                return index
+    return None
+
+
+def parse_inline_link_destination(content: str) -> str | None:
+    content = content.strip()
+    if not content:
+        return None
+    if content.startswith("<"):
+        closing = content.find(">", 1)
+        return content[1:closing] if closing > 1 else None
+
+    destination: list[str] = []
+    depth = 0
+    escaped = False
+    for character in content:
+        if escaped:
+            destination.append(character)
+            escaped = False
+            continue
+        if character == "\\":
+            escaped = True
+            continue
+        if character.isspace() and depth == 0:
+            break
+        if character == "(":
+            depth += 1
+        elif character == ")" and depth > 0:
+            depth -= 1
+        destination.append(character)
+    value = "".join(destination).strip()
+    return value or None
+
+
+def resolve_local_link(
+    root: Path, source: Path, raw_target: str
+) -> tuple[Path | None, bool]:
     target = unquote(raw_target.strip())
     if not target or target.startswith("#"):
         return None, False
@@ -567,7 +728,11 @@ def resolve_local_link(root: Path, source: Path, raw_target: str) -> tuple[Path 
     if not link_path:
         return None, False
 
-    candidate = root / link_path.lstrip("/") if link_path.startswith("/") else source.parent / link_path
+    candidate = (
+        root / link_path.lstrip("/")
+        if link_path.startswith("/")
+        else source.parent / link_path
+    )
     try:
         resolved = candidate.resolve(strict=False)
         relative = resolved.relative_to(root.resolve())
@@ -584,7 +749,9 @@ def has_actionable_navigation(text: str, reference: str, domain: str) -> bool:
         start = max(0, index - 2)
         end = min(len(lines), index + 2)
         context = " ".join(lines[start:end])
-        if SEARCH_ACTION_PATTERN.search(context) and DOMAIN_PURPOSE_PATTERNS[domain].search(context):
+        if SEARCH_ACTION_PATTERN.search(context) and DOMAIN_PURPOSE_PATTERNS[
+            domain
+        ].search(context):
             return True
     return False
 
@@ -594,7 +761,9 @@ def governed_entrypoints(root: Path) -> list[Path]:
     return [path for path in paths if path.is_file()]
 
 
-def validate_inline_repository_references(root: Path, source: str, text: str) -> list[dict[str, str]]:
+def validate_inline_repository_references(
+    root: Path, source: str, text: str
+) -> list[dict[str, str]]:
     warnings: list[dict[str, str]] = []
     for match in INLINE_CODE_PATTERN.finditer(text):
         reference = match.group(1).strip().replace("\\", "/")
@@ -618,14 +787,27 @@ def normalize_repository_reference(reference: str) -> str | None:
         or "$" in reference
         or "<" in reference
         or ">" in reference
-        or reference.startswith("@")
-        or reference.startswith("--")
+        or reference.startswith(("@", "--"))
         or " " in reference
     ):
         return None
 
-    prefixes = (".agents/", ".github/", "docs/", "packages/", "scripts/", "test/", "tests/")
-    files = {"AGENTS.md", "CLAUDE.md", "package.json", "pnpm-lock.yaml", "wrangler.toml"}
+    prefixes = (
+        ".agents/",
+        ".github/",
+        "docs/",
+        "packages/",
+        "scripts/",
+        "test/",
+        "tests/",
+    )
+    files = {
+        "AGENTS.md",
+        "CLAUDE.md",
+        "package.json",
+        "pnpm-lock.yaml",
+        "wrangler.toml",
+    }
     if reference in files or reference.startswith(prefixes):
         return reference.lstrip("/").rstrip("/")
     return None
