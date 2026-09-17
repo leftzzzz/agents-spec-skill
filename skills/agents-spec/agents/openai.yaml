@@ -1,4 +1,4 @@
 interface:
   display_name: "AGENTS Spec"
-  short_description: "统一 Agent 文档路由、工程 Spec 单一来源与结构护栏"
+  short_description: "统一文档路由与只含当前唯一规则的工程 Spec"
   default_prompt: "Use $agents-spec to audit and reorganize this repository's shared agent instructions and SDD document indexes."
