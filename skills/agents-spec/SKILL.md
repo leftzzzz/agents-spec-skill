@@ -1,6 +1,6 @@
 ---
 name: agents-spec
-description: Audit, reorganize, split, migrate, and maintain AGENTS.md, optional platform instruction files, and non-business engineering Specs with cross-agent routing and SDD-aligned docs/specs, docs/requirements, and docs/technical directories. Use when cleaning up agent instructions, organizing engineering standards, contracts, policies, or invariants, separating business requirements and technical decisions from Specs, migrating rules out of .agents, checking multi-agent compatibility, or installing deterministic structure guardrails.
+description: Audit, reorganize, split, migrate, and maintain AGENTS.md, optional platform instruction files, and non-business engineering Specs with cross-agent routing and SDD-aligned docs/specs, docs/requirements, and docs/technical directories. Use when cleaning up agent instructions, organizing engineering standards, contracts, policies, or invariants, recording accepted facts, conclusions, or decisions into durable documentation, separating business requirements and technical decisions from Specs, migrating rules out of .agents, checking multi-agent compatibility, or installing deterministic structure guardrails.
 ---
 
 # AGENTS Spec
@@ -61,6 +61,14 @@ Apply these checks to Agent instructions and to normative statements inside engi
 - Keep one authoritative body for a principle. Other locations may contain trigger indexes that link to it, and multiple distinct indexes may point to the same source.
 - Automate a requirement only when the judgment is deterministic, stable, sufficiently important or frequent, low in false positives, and invoked from a real enforcement point. Keep contextual or semantic judgment in prose and review.
 - Validate a new enforced rule with a violating case, an intended safe exception or an explicit no-exception case, and an adjacent irrelevant case. Narrow or remove a rule that repeatedly produces false positives.
+
+## Durable Conclusion Writeback
+
+Before recording an accepted rule, fact, decision, or conclusion in durable documentation, locate the authoritative body for its subject. Read the surrounding scope and adjacent rules first; do not add a conclusion from a filename or isolated phrase. If conflicting authorities exist, resolve or report the conflict before choosing a target. If no authority exists, apply the persistent-rule admission checks and classify the statement by its documented responsibility.
+
+Persist only stable, reusable content. Do not save raw conversation history, task status, or process narration. Convert an accepted conclusion into the smallest current statement that names its scope, invariant, owner when ownership is part of the contract, and evidence or validation expectation when the rule depends on them. Keep rationale and decision history in requirements or technical documents, never inside an engineering Spec.
+
+Do not introduce a parallel source, storage name, or alias for content that already has an authoritative body. Prefer the existing authority even when its name differs from the request. Update only index links when routing changes; indexes and root instructions must link to the authority rather than copy its rule. After writeback, run the structural guard and any repository-specific documentation checks before declaring the conclusion durable.
 
 ## Entrypoints And Routing
 
