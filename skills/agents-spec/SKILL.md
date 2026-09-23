@@ -70,6 +70,14 @@ Persist only stable, reusable content. Do not save raw conversation history, tas
 
 Do not introduce a parallel source, storage name, or alias for content that already has an authoritative body. Prefer the existing authority even when its name differs from the request. Update only index links when routing changes; indexes and root instructions must link to the authority rather than copy its rule. After writeback, run the structural guard and any repository-specific documentation checks before declaring the conclusion durable.
 
+For a conclusion about an external system, verify the system's current authoritative source before writing it down. Distinguish identity, existence, availability, capability, configuration, and measured behavior; do not substitute a related system, model, package, or API for the requested subject. If the authoritative source cannot establish the claim, persist the limitation as unknown or as a required verification step rather than presenting an assumption as fact. When the fact is time-sensitive, state the evidence or validation expectation needed before callers rely on it.
+
+## Publication Documentation Audit
+
+Before treating documentation as ready for publication, audit the audience boundary as well as the structure. Public entry surfaces are routers and adapters for onboarding, not independent authorities for engineering rules; they must link to the authoritative source instead of copying its detailed rule.
+
+Separate current behavior, setup assumptions, decision rationale, and historical material. Archive useful history rather than deleting it, and present archived material as history rather than current authority. Verify machine-checkable public claims, such as commands, versions, paths, identifiers, entrypoints, and configuration keys, against the current source, configuration, or command output. Treat unverified claims as assumptions or review items. Exclude secrets, credentials, private control-plane state, and unintended private identifiers from public surfaces. Automated scans help find exposure, but they do not prove that all sensitive information has been removed.
+
 ## Entrypoints And Routing
 
 Keep root `AGENTS.md` compact but substantive. Include a documentation navigation table that links all three entrypoints and explains when to use them:
