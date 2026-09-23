@@ -1,6 +1,6 @@
 ---
 name: agents-spec
-description: Audit, reorganize, split, migrate, and maintain AGENTS.md, optional platform instruction files, and current-only engineering Specs with cross-agent routing and SDD-aligned docs/specs, docs/requirements, and docs/technical directories. Use when cleaning up agent instructions, organizing engineering standards, contracts, policies, or invariants, removing history or summaries from Specs, separating business requirements and technical decisions from Specs, migrating rules out of .agents, checking multi-agent compatibility, or installing deterministic structure guardrails.
+description: Audit, reorganize, split, migrate, and maintain AGENTS.md, optional platform instruction files, and current-only engineering Specs with cross-agent routing and SDD-aligned docs/specs, docs/requirements, and docs/technical directories. Use when cleaning up agent instructions, organizing engineering standards, contracts, policies, or invariants, recording accepted facts, conclusions, or decisions into durable documentation, auditing publication documentation, removing history or summaries from Specs, separating business requirements and technical decisions from Specs, migrating rules out of .agents, checking multi-agent compatibility, or installing deterministic structure guardrails.
 ---
 
 # AGENTS Spec
@@ -65,6 +65,22 @@ Apply these checks to Agent instructions and to normative statements inside engi
 - Keep one authoritative body for a principle. Other locations may contain trigger indexes that link to it, and multiple distinct indexes may point to the same source.
 - Automate a requirement only when the judgment is deterministic, stable, sufficiently important or frequent, low in false positives, and invoked from a real enforcement point. Keep contextual or semantic judgment in prose and review.
 - Validate a new enforced rule with a violating case, an intended safe exception or an explicit no-exception case, and an adjacent irrelevant case. Narrow or remove a rule that repeatedly produces false positives.
+
+## Durable Conclusion Writeback
+
+Before recording an accepted rule, fact, decision, or conclusion in durable documentation, locate the authoritative body for its subject. Read the surrounding scope and adjacent rules first; do not add a conclusion from a filename or isolated phrase. If conflicting authorities exist, resolve or report the conflict before choosing a target. If no authority exists, apply the persistent-rule admission checks and classify the statement by its documented responsibility.
+
+Persist only stable, reusable content. Do not save raw conversation history, task status, or process narration. Convert an accepted conclusion into the smallest current statement that names its scope, invariant, owner when ownership is part of the contract, and evidence or validation expectation when the rule depends on them. Keep rationale and decision history in requirements or technical documents, never inside an engineering Spec.
+
+Do not introduce a parallel source, storage name, or alias for content that already has an authoritative body. Prefer the existing authority even when its name differs from the request. Update only index links when routing changes; indexes and root instructions must link to the authority rather than copy its rule. After writeback, run the structural guard and any repository-specific documentation checks before declaring the conclusion durable.
+
+For a conclusion about an external system, verify the system's current authoritative source before writing it down. Distinguish identity, existence, availability, capability, configuration, and measured behavior; do not substitute a related system, model, package, or API for the requested subject. If the authoritative source cannot establish the claim, persist the limitation as unknown or as a required verification step rather than presenting an assumption as fact. When the fact is time-sensitive, state the evidence or validation expectation needed before callers rely on it.
+
+## Publication Documentation Audit
+
+Before treating documentation as ready for publication, audit the audience boundary as well as the structure. Public entry surfaces are routers and adapters for onboarding, not independent authorities for engineering rules; they must link to the authoritative source instead of copying its detailed rule.
+
+Separate current behavior, setup assumptions, decision rationale, and historical material. Archive useful history rather than deleting it, and present archived material as history rather than current authority. Verify machine-checkable public claims, such as commands, versions, paths, identifiers, entrypoints, and configuration keys, against the current source, configuration, or command output. Treat unverified claims as assumptions or review items. Exclude secrets, credentials, private control-plane state, and unintended private identifiers from public surfaces. Automated scans help find exposure, but they do not prove that all sensitive information has been removed.
 
 ## Entrypoints And Routing
 
